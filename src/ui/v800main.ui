@@ -1,20 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>v800main</class>
- <widget class="QWidget" name="v800main" >
-  <property name="geometry" >
+ <widget class="QWidget" name="v800main">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>229</width>
+    <height>110</height>
    </rect>
   </property>
-  <property name="windowTitle" >
-   <string>v800main</string>
+  <property name="windowTitle">
+   <string>V800 Routes</string>
   </property>
+  <widget class="QWidget" name="gridLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>-1</x>
+     <y>0</y>
+     <width>231</width>
+     <height>111</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="QPushButton" name="to_bpb">
+      <property name="text">
+       <string>Convert to BPB</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QPushButton" name="to_kml">
+      <property name="text">
+       <string>Convert to KML</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
  </widget>
- <layoutDefault spacing="6" margin="11" />
- <pixmapfunction></pixmapfunction>
+ <layoutdefault spacing="6" margin="11"/>
  <resources/>
  <connections/>
 </ui>

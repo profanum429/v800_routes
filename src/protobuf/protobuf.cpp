@@ -23,6 +23,7 @@
 #include <QFile>
 #include <QXmlQuery>
 #include <QXmlResultItems>
+#include <QDateTime>
 
 #include <math.h>
 
@@ -58,7 +59,7 @@ void protobuf::handle_to_bpb(QString src_file, QString name)
         if(points.isValid())
             points.evaluateTo(&lons);
 
-        output = src_file.replace(tr(".gpx"), tr(".bpb"));
+        output = src_file.toLower().replace(tr(".gpx"), tr(".bpb"));
     }
     else if(src_file.contains(tr(".kml")))
     {
@@ -78,7 +79,7 @@ void protobuf::handle_to_bpb(QString src_file, QString name)
             lats.append(each_pt.at(cnt).split(tr(",")).at(1));
         }
 
-        output = src_file.replace(tr(".kml"), tr(".bpb"));
+        output = src_file.toLower().replace(tr(".kml"), tr(".bpb"));
     }
 
     src.close();
@@ -129,6 +130,27 @@ void protobuf::handle_to_bpb(QString src_file, QString name)
         emit to_bpb_failure();
     }
 
+    data::PbIdentifier id;
+    id.set_ecosystem_id(1000000);
+
+    data::PbSystemDateTime time_date;
+    data::PbDate date;
+    data::PbTime time;
+
+    QDateTime cur_datetime = QDateTime::currentDateTimeUtc();
+    date.set_day(cur_datetime.date().day());
+    date.set_month(cur_datetime.date().month());
+    date.set_year(cur_datetime.date().year());
+    time.set_hour(cur_datetime.time().hour());
+    time.set_minute(cur_datetime.time().minute());
+    time.set_seconds(cur_datetime.time().second());
+
+    time_date.set_allocated_date(&date);
+    time_date.set_allocated_time(&time);
+
+    id.set_allocated_created(&time_date);
+    id.set_allocated_last_modified(&time_date);
+
     emit to_bpb_done();
 }
 
@@ -142,7 +164,7 @@ void protobuf::handle_to_kml(QString src_file)
     src.close();
 
     QString output;
-    output = src_file.replace(tr(".bpb"), tr(".kml"));
+    output = src_file.toLower().replace(tr(".bpb"), tr(".kml"));
 
     QFile out_file(output);
     out_file.open(QFile::WriteOnly);

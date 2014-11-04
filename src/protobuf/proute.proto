@@ -57,3 +57,131 @@ message PbPlannedRoute {
  repeated PbRoutePoint point = 6;
 }
 
+message PbIdentifier {
+ required uint64 ecosystem_id = 1;
+ required PbSystemDateTime created = 2;
+ required PbSystemDateTime last_modified = 3;
+ optional bool deleted = 4;
+}
+
+message PbDuration {
+ optional uint32 hours = 1 [default = 0];
+ optional uint32 minutes = 2 [default = 0];
+ optional uint32 seconds = 3 [default = 0];
+ optional uint32 millis = 4 [default = 0];
+}
+
+message PbSportIdentifier {
+ required uint64 value = 1;
+}
+
+message PbVolumeTarget {
+
+ enum PbVolymeTargetType {
+  VOLUME_TARGET_TYPE_DURATION = 0;
+  VOLUME_TARGET_TYPE_DISTANCE = 1;
+  VOLUME_TARGET_TYPE_CALORIES = 2;
+ }
+ required PbVolumeTarget.PbVolymeTargetType target_type = 1;
+ optional PbDuration duration = 2;
+ optional float distance = 3;
+ optional uint32 calories = 4;
+}
+
+message PbPhaseGoal {
+
+ enum PhaseGoalType {
+  PHASE_GOAL_OFF = 0;
+  PHASE_GOAL_TIME = 1;
+  PHASE_GOAL_DISTANCE = 2;
+  PHASE_GOAL_INCREASING_HR = 3;
+  PHASE_GOAL_DECREASING_HR = 4;
+  PHASE_GOAL_RACE_PACE = 5;
+ }
+ required PhaseGoalType goal_type = 1;
+ optional PbDuration duration = 2;
+ optional float distance = 3;
+ optional uint32 heart_rate = 4;
+}
+
+message PbPhaseIntensity {
+ message IntensityZone {
+  required uint32 lower = 1;
+  required uint32 upper = 2;
+ }
+
+
+ enum PhaseIntensityType {
+  PHASE_INTENSITY_FREE = 0;
+  PHASE_INTENSITY_SPORTZONE = 1;
+  PHASE_INTENSITY_SPEED_ZONE = 2;
+  PHASE_INTENSITY_POWER_ZONE = 3;
+ }
+ required PhaseIntensityType intensity_type = 1;
+ optional IntensityZone heart_rate_zone = 2;
+ optional IntensityZone speed_zone = 3;
+ optional IntensityZone power_zone = 4;
+}
+
+message PbPhase {
+
+ enum PbPhaseChangeType {
+  CHANGE_MANUAL = 0;
+  CHANGE_AUTOMATIC = 1;
+ }
+ required PbOneLineText name = 1;
+ required PbPhaseChangeType change = 2;
+ required PbPhaseGoal goal = 3;
+ required PbPhaseIntensity intensity = 4;
+ optional uint32 repeat_count = 5;
+ optional uint32 jump_index = 6;
+}
+
+message PbPhases {
+ repeated PbPhase phase = 1;
+}
+
+message PbSteadyRacePace {
+ required PbDuration duration = 1;
+ required float distance = 2;
+}
+
+message PbLocalDateTime {
+ required PbDate date = 1;
+ required PbTime time = 2;
+ required bool OBSOLETE_trusted = 3;
+ optional int32 time_zone_offset = 4;
+}
+
+message PbMultiLineText {
+ required string text = 1;
+}
+
+message PbExerciseTarget {
+
+ enum PbExerciseTargetType {
+  EXERCISE_TARGET_TYPE_FREE = 0;
+  EXERCISE_TARGET_TYPE_VOLUME = 1;
+  EXERCISE_TARGET_TYPE_PHASED = 2;
+  EXERCISE_TARGET_TYPE_ROUTE = 3;
+  EXERCISE_TARGET_TYPE_STEADY_RACE_PACE = 4;
+  EXERCISE_TARGET_TYPE_ROUTE_RACE_PACE = 5;
+ }
+ required PbExerciseTargetType target_type = 1;
+ optional PbSportIdentifier sport_id = 2;
+ optional PbVolumeTarget volume_target = 3;
+ optional PbPhases phases = 4;
+ optional PbRouteId route = 5;
+ optional PbSteadyRacePace steady_race_pace = 6;
+}
+
+message PbTrainingSessionTarget {
+ required PbOneLineText name = 2;
+ optional PbSportIdentifier sport_id = 3;
+ optional PbLocalDateTime start_time = 4;
+ optional PbMultiLineText description = 5;
+ repeated PbExerciseTarget exercise_target = 6;
+ optional bool target_done = 7;
+ optional PbDuration duration = 8;
+}
+

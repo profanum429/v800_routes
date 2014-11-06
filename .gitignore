@@ -32,3 +32,5 @@ debug/v800_routes.app/Contents/PkgInfo
 debug/v800_routes.app/Contents/Resources/empty.lproj
 Makefile
 .qmake.stash
+src/protobuf/proute.pb.cc
+src/protobuf/proute.pb.h

@@ -19,12 +19,15 @@
 
 #include "v800main.h"
 #include <QApplication>
+#include <QDateTime>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     v800main w;
     w.show();
+
+    qsrand(QDateTime::currentDateTimeUtc().toTime_t());
 
     return a.exec();
 }

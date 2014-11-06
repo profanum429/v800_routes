@@ -21,6 +21,7 @@
 #include "proute.pb.h"
 
 #include <QFile>
+#include <QDir>
 #include <QXmlQuery>
 #include <QXmlResultItems>
 #include <QDateTime>
@@ -42,6 +43,9 @@ void protobuf::handle_to_bpb(QString src_file, QString name)
     QXmlQuery points;
     QStringList lats, lons;
     QString output;
+    QByteArray data;
+    qint64 rand_id;
+    qint32 ecosystem;
 
     qDebug("Source: %s", src_file.toLatin1().constData());
 
@@ -58,8 +62,6 @@ void protobuf::handle_to_bpb(QString src_file, QString name)
         points.setQuery(tr("declare default element namespace \"http://www.topografix.com/GPX/1/1\";//trkpt/@lon/string()"));
         if(points.isValid())
             points.evaluateTo(&lons);
-
-        output = src_file.toLower().replace(tr(".gpx"), tr(".bpb"));
     }
     else if(src_file.contains(tr(".kml")))
     {
@@ -78,15 +80,15 @@ void protobuf::handle_to_bpb(QString src_file, QString name)
             lons.append(each_pt.at(cnt).split(tr(",")).at(0));
             lats.append(each_pt.at(cnt).split(tr(",")).at(1));
         }
-
-        output = src_file.toLower().replace(tr(".kml"), tr(".bpb"));
     }
 
     src.close();
 
     data::PbPlannedRoute proute;
     proute.mutable_name()->set_text(name.toLatin1().constData());
-    proute.mutable_route_id()->set_value(1000000);
+
+    rand_id = (qint64)qrand() << 32 | qrand();
+    proute.mutable_route_id()->set_value(rand_id);
 
     double initial_lat, initial_lon, lat, lon;
     int x, y;
@@ -115,41 +117,94 @@ void protobuf::handle_to_bpb(QString src_file, QString name)
         point->set_z_offset(0);
     }
 
-    QByteArray data;
+    data.clear();
     data.append(proute.SerializeAsString().data(), proute.ByteSize());
 
-    if(!output.isEmpty())
+    QString bpb_dir =  QString(tr("%1/%2").arg(QFileInfo(src).absolutePath()).arg(QFileInfo(src).completeBaseName()));
+    if(!QDir().mkdir(bpb_dir))
     {
-        QFile out_file(output);
-        out_file.open(QFile::WriteOnly);
-        out_file.write(data);
-        out_file.close();
+        if(!QDir(bpb_dir).exists())
+        {
+            emit to_bpb_failure();
+            return;
+        }
     }
-    else
-    {
-        emit to_bpb_failure();
-    }
+
+    output.clear();
+    output = QString(tr("%1/PROUTE.BPB").arg(bpb_dir));
+    QFile proute_file(output);
+    proute_file.open(QFile::WriteOnly);
+    proute_file.write(data);
+    proute_file.close();
 
     data::PbIdentifier id;
-    id.set_ecosystem_id(1000000);
-
-    data::PbSystemDateTime time_date;
-    data::PbDate date;
-    data::PbTime time;
+    ecosystem = (qint64)qrand() << 32 | qrand();
+    id.set_ecosystem_id(ecosystem);
 
     QDateTime cur_datetime = QDateTime::currentDateTimeUtc();
-    date.set_day(cur_datetime.date().day());
-    date.set_month(cur_datetime.date().month());
-    date.set_year(cur_datetime.date().year());
-    time.set_hour(cur_datetime.time().hour());
-    time.set_minute(cur_datetime.time().minute());
-    time.set_seconds(cur_datetime.time().second());
 
-    time_date.set_allocated_date(&date);
-    time_date.set_allocated_time(&time);
+    data::PbSystemDateTime *time_date = id.mutable_created();
+    data::PbDate *date = time_date->mutable_date();
+    data::PbTime *time = time_date->mutable_time();
 
-    id.set_allocated_created(&time_date);
-    id.set_allocated_last_modified(&time_date);
+    date->set_day(cur_datetime.date().day());
+    date->set_month(cur_datetime.date().month());
+    date->set_year(cur_datetime.date().year());
+    time->set_hour(cur_datetime.time().hour());
+    time->set_minute(cur_datetime.time().minute());
+    time->set_seconds(cur_datetime.time().second());
+    time->set_millis(0);
+
+    time_date->set_trusted(false);
+
+    time_date = id.mutable_last_modified();
+    date = time_date->mutable_date();
+    time = time_date->mutable_time();
+
+    date->set_day(cur_datetime.date().day());
+    date->set_month(cur_datetime.date().month());
+    date->set_year(cur_datetime.date().year());
+    time->set_hour(cur_datetime.time().hour());
+    time->set_minute(cur_datetime.time().minute());
+    time->set_seconds(cur_datetime.time().second());
+    time->set_millis(0);
+
+    time_date->set_trusted(false);
+
+    data.clear();
+    data.append(id.SerializeAsString().data(), id.ByteSize());
+
+    output.clear();
+    output = QString(tr("%1/ID.BPB").arg(bpb_dir));
+    QFile id_file(output);
+    id_file.open(QFile::WriteOnly);
+    id_file.write(data);
+    id_file.close();
+
+    data::PbTrainingSessionTarget tst;
+    data::PbOneLineText *tst_name = tst.mutable_name();
+    tst_name->set_text(name.toLatin1().constData());
+
+    data::PbExerciseTarget *target = tst.add_exercise_target();
+    target->set_target_type(data::PbExerciseTarget::EXERCISE_TARGET_TYPE_ROUTE);
+
+    data::PbSportIdentifier *sport_id = target->mutable_sport_id();
+    sport_id->set_value(1);
+
+    data::PbPhases *phases = target->mutable_phases();
+
+    data::PbRouteId *route_id = target->mutable_route();
+    route_id->set_value(rand_id);
+
+    data.clear();
+    data.append(tst.SerializeAsString().data(), tst.ByteSize());
+
+    output.clear();
+    output = QString(tr("%1/TST.BPB").arg(bpb_dir));
+    QFile tst_file(output);
+    tst_file.open(QFile::WriteOnly);
+    tst_file.write(data);
+    tst_file.close();
 
     emit to_bpb_done();
 }
